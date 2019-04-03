@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.CartMapper">
+	<insert id="insertGoods" parameterType="cartitems">
+		INSERT INTO carttable(goodsID,userID,number,priceSum) VALUES
+		(#{goodsID},#{userID},#{number},#{priceSum});
+	</insert>
+	<select id="isThereSameGoods" resultMap="isThereSameGoodsRM">
+		SELECT
+			cartID,carttable.goodsID,carttable.userID,
+			number,priceSum,userLoginName,
+			goodstable.goodsName,goodstable.goodsImg,
+			goodstable.goodsPrice,goodstable.goodsStock 
+		FROM
+			usertable,carttable,goodstable 
+		WHERE
+			usertable.userID = carttable.userID 
+			AND goodstable.goodsID = carttable.goodsID 
+			AND carttable.userID = #{userID} 
+			AND carttable.goodsID = #{goodsID};
+	</select>
+	<resultMap type="cartitems" id="isThereSameGoodsRM">
+		<id property="cartID" column="cartID"/>
+		<result property="number" column="number"/>
+		<result property="priceSum" column="priceSum"/>
+		<collection property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userLoginName" column="userLoginName"/>
+		</collection>
+		<collection property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+			<result property="goodsPrice" column="goodsPrice"/>
+			<result property="goodsStock" column="goodsStock"/>
+		</collection>
+	</resultMap>
+	<update id="addCartItemsNumber" parameterType="cartitems">
+		UPDATE carttable SET number = number + 1 ,priceSum = priceSum + #{price}
+		WHERE goodsID = #{goodsID} AND userID = #{userID};
+	</update>
+	<select id="showCart" parameterType="int" resultMap="showCartRM">
+		SELECT
+			cartID,goodstable.goodsID,usertable.userID,
+			number,priceSum,userLoginName,
+			goodstable.goodsName,goodstable.goodsImg,
+			goodstable.goodsPrice,goodstable.goodsStock 
+		FROM
+			usertable,carttable,goodstable 
+		WHERE
+			usertable.userID = carttable.userID 
+			AND goodstable.goodsID = carttable.goodsID 
+			AND carttable.userID = #{userID}
+	</select>
+	<resultMap type="cartitems" id="showCartRM">
+		<id property="cartID" column="cartID"/>
+		<result property="number" column="number"/>
+		<result property="priceSum" column="priceSum"/>
+		<collection property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userLoginName" column="userLoginName"/>
+		</collection>
+		<collection property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+			<result property="goodsPrice" column="goodsPrice"/>
+			<result property="goodsStock" column="goodsStock"/>
+		</collection>
+	</resultMap>
+	<update id="cartItemPlus1" parameterType="cartitems">
+		UPDATE carttable SET number = number + 1 ,priceSum = priceSum + #{price}
+		WHERE cartID = #{cartID};
+	</update>
+	<update id="cartItemMinus1" parameterType="cartitems">
+		UPDATE carttable SET number = number - 1 ,priceSum = priceSum - #{price}
+		WHERE cartID = #{cartID};
+	</update>
+	<select id="getGoods" parameterType="int" resultType="int">
+		SELECT goodsID FROM carttable WHERE cartID=#{cartID};
+	</select>
+	<select id="getUser" parameterType="int" resultType="int">
+		SELECT userID FROM carttable WHERE cartID=#{cartID};
+	</select>
+	<select id="CartSums" parameterType="int" resultType="int">
+		SELECT SUM(number) FROM carttable WHERE userID = #{userID};
+	</select>
+	<delete id="deleteGoods" parameterType="int">
+		DELETE FROM carttable WHERE cartID = #{cartID};
+	</delete>
+	<select id="countCartItems" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM carttable WHERE userID= #{userID};
+	</select>
+</mapper>

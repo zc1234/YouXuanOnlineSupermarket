@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.OrderMapper">
+	<insert id="insertOrder" parameterType="order" useGeneratedKeys="true" keyProperty="orderID">
+		INSERT INTO ordertable(userID,addressID,orderNumber,orderCreatetime,orderNote,orderStatus,priceSum,delivery,startTime,endTime) 
+		VALUES (#{user.userID},#{address.addressID},#{orderNumber},SYSDATE(),#{orderNote},#{orderStatus},#{priceSum},#{delivery},#{startTime},#{endTime});
+	</insert>
+	<insert id="insertOrderItems" parameterType="orderitems" useGeneratedKeys="true" keyProperty="orderitemsID">
+		INSERT INTO orderitemstable(goodsID,goodsNumber,orderID,priceSum) VALUES (#{goods.goodsID},#{goodsNumber},#{order.orderID},#{priceSum});
+	</insert>
+	<update id="updatePriceSum" parameterType="map">
+		UPDATE ordertable SET priceSum=#{priceSum}  WHERE orderID=#{orderID}
+	</update>
+	<update id="submitOrder" parameterType="int">
+		UPDATE ordertable SET orderStatus=1 WHERE orderID=#{orderID}
+	</update>
+	<update id="sendOutGoods" parameterType="int">
+		UPDATE ordertable SET orderStatus=2 WHERE orderID=#{orderID}
+	</update>
+	<update id="receiveGoods" parameterType="int">
+		UPDATE ordertable SET orderStatus=3 WHERE orderID=#{orderID}
+	</update>
+	<update id="deleteOrder" parameterType="int">
+		UPDATE ordertable SET orderStatus=5 WHERE orderID=#{orderID}
+	</update>
+	<select id="countAllOrders" resultType="int">
+		SELECT COUNT(*) FROM ordertable;
+	</select>
+	<select id="countOrders" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM ordertable WHERE orderStatus = #{orderStatus}
+	</select>
+	<select id="showAllOrders" resultMap="showAllOrdersRM">
+		SELECT
+			ordertable.orderID,
+			usertable.userLoginName,
+			ordertable.orderNumber,
+			ordertable.orderCreatetime,
+			ordertable.orderNote,
+			ordertable.orderStatus 
+		FROM
+			ordertable,
+			usertable 
+		WHERE
+			usertable.userID = ordertable.userID
+		ORDER BY ordertable.orderStatus DESC
+		LIMIT #{ordersPaging.index},#{ordersPaging.pageSize};
+	</select>
+	<resultMap type="order" id="showAllOrdersRM">
+		<id property="orderID" column="orderID"/>
+		<result property="orderNumber" column="orderNumber"/>
+		<result property="orderCreatetime" column="orderCreatetime"/>
+		<result property="orderNote" column="orderNote"/>
+		<result property="orderStatus" column="orderStatus"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userLoginName" column="userLoginName"/>
+		</association>
+	</resultMap>
+	<select id="showSomeOrders" parameterType="int" resultMap="showSomeOrdersRM">
+		SELECT
+			ordertable.orderID,
+			usertable.userLoginName,
+			ordertable.orderNumber,
+			ordertable.orderCreatetime,
+			ordertable.orderNote,
+			ordertable.orderStatus 
+		FROM
+			ordertable,
+			usertable 
+		WHERE
+			usertable.userID = ordertable.userID
+		AND ordertable.orderStatus = #{param}
+		ORDER BY ordertable.orderCreatetime DESC
+		LIMIT #{ordersPaging.index},#{ordersPaging.pageSize};
+	</select>
+	<resultMap type="order" id="showSomeOrdersRM">
+		<id property="orderID" column="orderID"/>
+		<result property="orderNumber" column="orderNumber"/>
+		<result property="orderCreatetime" column="orderCreatetime"/>
+		<result property="orderNote" column="orderNote"/>
+		<result property="orderStatus" column="orderStatus"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userLoginName" column="userLoginName"/>
+		</association>
+	</resultMap>
+	<select id="findOrderItemsByID" parameterType="int" resultMap="findOrderItemsByIDRM">
+		SELECT
+			orderitemstable.orderitemsID,
+			goodstable.goodsID,
+			goodstable.goodsName,
+			goodstable.goodsImg,
+			goodstable.goodsPrice,
+			orderitemstable.goodsNumber,
+			orderitemstable.orderitemsStatus,
+			orderitemstable.priceSum 
+		FROM
+			orderitemstable,
+			goodstable 
+		WHERE
+			orderitemstable.goodsID = goodstable.goodsID
+		AND
+			orderitemstable.orderID=#{orderID};
+	</select>
+	<resultMap type="orderitems" id="findOrderItemsByIDRM">
+		<id property="orderitemsID" column="orderitemsID"/>
+		<result property="goodsNumber" column="goodsNumber"/>
+		<result property="orderitemsStatus" column="orderitemsStatus"/>
+		<result property="priceSum" column="priceSum"/>
+		<association property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+			<result property="goodsPrice" column="goodsPrice"/>
+		</association>
+	</resultMap>
+	<select id="countOrder" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM ordertable WHERE userID = #{userID} 
+		<if test="orderStatus!=null">
+			AND orderStatus = #{orderStatus}
+		</if>
+	</select>
+	<select id="datetime" resultType="String">
+		select date_format(now(),'%Y-%m-%d-%a');
+	</select>
+	<select id="remainingTime" parameterType="int" resultType="int">
+		select TIMESTAMPDIFF(MINUTE,now(),startTime) FROM ordertable WHERE orderID=#{orderID}
+	</select>
+	<select id="findOrdersbyUserID" parameterType="int" resultType="order">
+		SELECT * FROM ordertable WHERE userID =#{userID}
+	</select>
+	<select id="findRefundOrdersbyUserID" parameterType="int" resultType="order">
+		SELECT * FROM ordertable WHERE orderStatus IN(4,6) AND userID =#{userID}
+	</select>
+	<select id="findOrderItembyOrderItemID" parameterType="int" resultType="orderitems">
+		SELECT * FROM orderitemstable WHERE orderitemsID = #{orderitemsID};
+	</select>
+	<select id="findGoodsIDbyOrderItemID" parameterType="int" resultType="int">
+		SELECT goodsID FROM orderitemstable WHERE orderitemsID=#{orderitemsID};
+	</select>
+	<select id="findOrderItemAndGoodsbyOrderItemID" parameterType="int" resultMap="findOrderItemAndGoodsbyOrderItemIDRM">
+		SELECT
+			orderitemstable.orderitemsID,
+			orderitemstable.goodsID,
+			orderitemstable.goodsNumber,
+			goodstable.goodsName,
+			goodstable.goodsImg,
+			goodstable.goodsPrice 
+		FROM
+			orderitemstable,
+			goodstable 
+		WHERE
+			goodstable.goodsID = orderitemstable.goodsID 
+			AND orderitemstable.orderitemsID =#{orderitemsID}
+	</select>
+	<resultMap type="orderitems" id="findOrderItemAndGoodsbyOrderItemIDRM">
+		<id property="orderitemsID" column="orderitemsID"/>
+		<result property="goodsNumber" column="goodsNumber"/>
+		<association property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+			<result property="goodsPrice" column="goodsPrice"/>
+		</association>
+	</resultMap>
+	<select id="orderDetail" parameterType="int" resultMap="orderDetailRM">
+		SELECT
+			ordertable.orderID,
+			ordertable.addressID,
+			ordertable.orderNumber,
+			ordertable.orderCreatetime,
+			ordertable.orderNote,
+			ordertable.orderStatus,
+			ordertable.priceSum,
+			ordertable.delivery,
+			ordertable.startTime,
+			ordertable.endTime,
+			addresstable.addressUserName,
+			addresstable.phoneNumber,
+			addresstable.address
+		FROM
+			ordertable,
+			addresstable
+		WHERE
+			ordertable.addressID = addresstable.addressID 
+		AND  
+			orderID = #{orderID}
+	</select>
+	<resultMap type="order" id="orderDetailRM">
+		<id property="orderID" column="orderID"/>
+		<result property="orderNumber" column="orderNumber"/>
+		<result property="orderCreatetime" column="orderCreatetime"/>
+		<result property="orderNote" column="orderNote"/>
+		<result property="orderStatus" column="orderStatus"/>
+		<result property="priceSum" column="priceSum"/>
+		<result property="delivery" column="delivery"/>
+		<result property="startTime" column="startTime"/>
+		<result property="endTime" column="endTime"/>
+		<association property="address" column="addressID" javaType="address">
+			<id property="addressID" column="addressID"/>
+			<result property="addressUserName" column="addressUserName"/>
+			<result property="phoneNumber" column="phoneNumber"/>
+			<result property="address" column="address"/>
+		</association>
+	</resultMap>
+	<update id="updateStatus" parameterType="int">
+		UPDATE orderitemstable SET orderitemsStatus = 2 WHERE orderitemsID = #{orderitemsID}
+	</update>
+	<select id="refundInfo" parameterType="int" resultMap="refundInfoRM">
+		SELECT
+			orderitemstable.orderitemsID,
+			orderitemstable.goodsNumber,
+			orderitemstable.priceSum,
+			goodstable.goodsID,
+			goodstable.goodsName,
+			goodstable.goodsImg,
+			ordertable.orderID,
+			ordertable.orderCreatetime 
+		FROM
+			orderitemstable,
+			goodstable,
+			ordertable 
+		WHERE
+			orderitemstable.goodsID = goodstable.goodsID 
+			AND orderitemstable.orderID = ordertable.orderID
+			AND orderitemsID=#{orderitemsID}
+	</select>
+	<resultMap type="orderitems" id="refundInfoRM">
+		<id property="orderitemsID" column="orderitemsID"/>
+		<result property="goodsNumber" column="goodsNumber"/>
+		<result property="priceSum" column="priceSum"/>
+		<association property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+		</association>
+		<association property="order" column="orderID" javaType="order">
+			<id property="orderID" column="orderID"/>
+			<result property="orderCreatetime" column="orderCreatetime"/>
+		</association>
+	</resultMap>
+	<insert id="submitRefund" parameterType="map">
+		INSERT INTO refundtable(orderitemsID,refundType,refundReason,refundDetail) 
+		VALUES(#{orderitemsID},#{type},#{reason},#{refundDetail})
+	</insert>
+	<select id="isThereRefund" parameterType="int" resultType="refund">
+		SELECT * FROM refundtable WHERE orderitemsID=#{orderitemsID}
+	</select>
+	<select id="getOrderIDbyOrderItemsID" parameterType="int" resultType="int">
+		SELECT orderID FROM orderitemstable WHERE orderitemsID = #{orderitemsID}
+	</select>
+	<update id="orderRefund" parameterType="int">
+		UPDATE ordertable SET orderStatus=4 WHERE orderID=#{orderID}
+	</update>
+	<update id="orderItemRefund" parameterType="int">
+		UPDATE orderitemstable SET orderitemsStatus=0 WHERE orderitemsID=#{orderitemsID}
+	</update>
+	<update id="backSubmitRefund" parameterType="map">
+		UPDATE refundtable SET refundStatus=#{status},refundResponse=#{refundResponse} WHERE refundID=#{refundID}
+	</update>
+	<update id="changeRefundStatus" parameterType="int">
+		UPDATE orderitemstable SET orderitemsStatus=3 WHERE orderitemsID=#{orderitemsID}
+	</update>
+	<select id="getOrderItemsIDbyRefundID" parameterType="int" resultType="int">
+		SELECT orderitemsID FROM refundtable WHERE refundID = #{refundID}
+	</select>
+	<select id="isThereRefundItems" parameterType="int" resultType="int">
+		SELECT orderitemsStatus FROM orderitemstable WHERE orderID = #{orderID}
+	</select>
+	<update id="updateOrderStatus" parameterType="int">
+		UPDATE ordertable SET orderStatus=6 WHERE orderID=#{orderID}
+	</update>
+	<select id="getPriceSumByOrderID" parameterType="int" resultType="float">
+		SELECT priceSum FROM ordertable WHERE orderID = #{orderID}
+	</select>
+	<update id="updateScore" parameterType="map">
+		UPDATE usertable SET userScore = userScore + #{userScore} WHERE userID = #{userID}
+ 	</update>
+</mapper>

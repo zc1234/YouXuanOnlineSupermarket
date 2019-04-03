@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<properties resource="jdbc.properties"></properties>
+	<settings>
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+		<setting name="defaultStatementTimeout" value="25"/>
+		<setting name="defaultFetchSize" value="100"/>
+	</settings>
+	<typeAliases>
+		<typeAlias alias="user" type="com.store.pojo.User"/>
+		<typeAlias alias="goods" type="com.store.pojo.Goods"/>
+		<typeAlias alias="order" type="com.store.pojo.Order"/>
+		<typeAlias alias="orderitems" type="com.store.pojo.OrderItems"/>
+		<typeAlias alias="type" type="com.store.pojo.Type"/>
+		<typeAlias alias="paging" type="com.store.utils.Paging"/>
+		<typeAlias alias="cartitems" type="com.store.pojo.CartItems"/>
+		<typeAlias alias="comment" type="com.store.pojo.Comment"/>
+		<typeAlias alias="address" type="com.store.pojo.Address"/>
+		<typeAlias alias="favorite" type="com.store.pojo.Favorite"/>
+		<typeAlias alias="safe" type="com.store.pojo.Safe"/>
+		<typeAlias alias="refund" type="com.store.pojo.Refund"/>
+	</typeAliases>
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC"></transactionManager>
+			<dataSource type="POOLED">
+				<property name="driver" value="${database.driver}"/>
+				<property name="url" value="${database.url}"/>
+				<property name="username" value="${database.username}"/>
+				<property name="password" value="${database.password}"/>
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+		<mapper resource="com/store/mapper/UserMapper.xml"/>
+		<mapper resource="com/store/mapper/GoodsMapper.xml"/>
+		<mapper resource="com/store/mapper/TypeMapper.xml"/>
+		<mapper resource="com/store/mapper/CartMapper.xml"/>
+		<mapper resource="com/store/mapper/OrderMapper.xml"/>
+		<mapper resource="com/store/mapper/CommentMapper.xml"/>
+		<mapper resource="com/store/mapper/AddressMapper.xml"/>
+		<mapper resource="com/store/mapper/FavoriteMapper.xml"/>
+	</mappers>
+</configuration>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.FavoriteMapper">
+	<select id="favoritelist" parameterType="int" resultMap="favoritelistRM">
+		SELECT
+			favoriteID,
+			userID,
+			favoritetable.goodsID,
+			price,
+			goodstable.goodsID,
+			goodstable.goodsName,
+			goodstable.goodsImg,
+			goodstable.goodsPrice,
+			goodstable.goodsOriginalPrice,
+			goodstable.goodsStatus
+		FROM
+			favoritetable,
+			goodstable 
+		WHERE
+			favoritetable.goodsID = goodstable.goodsID 
+			AND userID = #{userID}
+		<if test="status==1">
+			LIMIT 0,8
+		</if>
+	</select>
+	<resultMap type="favorite" id="favoritelistRM">
+		<id property="favoriteID" column="favoriteID"/>
+		<result property="price" column="price"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+		</association>
+		<association property="goods" column="goodsID" javaType="goods">
+			<id property="goodsID" column="goodsID"/>
+			<result property="goodsName" column="goodsName"/>
+			<result property="goodsImg" column="goodsImg"/>
+			<result property="goodsPrice" column="goodsPrice"/>
+			<result property="goodsOriginalPrice" column="goodsOriginalPrice"/>
+			<result property="goodsStatus" column="goodsStatus"/>
+		</association>
+	</resultMap>
+	<select id="countFavorite" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM favoritetable WHERE userID =#{userID}
+	</select>
+	<update id="updateMonthSaleAndAvgPoint" parameterType="map">
+		UPDATE favoritetable SET monthSale = #{monthSale},avgPoint = #{avgPoint}
+		WHERE favoriteID = #{favoriteID}
+	</update>
+	<delete id="deleteFavorite" parameterType="int">
+		DELETE FROM favoritetable WHERE favoriteID = #{favoriteID}
+	</delete>
+</mapper>

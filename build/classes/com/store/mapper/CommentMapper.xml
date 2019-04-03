@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.CommentMapper">
+	<insert id="insertComment" parameterType="comment">
+		INSERT INTO commenttable (userID,orderitemsID,goodsID,score,commenttext,commentCreatetime)
+		VALUES (#{user.userID},#{orderItems.orderitemsID},#{goodsID},#{score},#{commenttext},SYSDATE())
+	</insert>
+	<select id="findCommentByGoodsID" parameterType="int" resultMap="findCommentByGoodsIDRM">
+		SELECT
+			commenttable.commentID,
+			commenttable.userID,
+			commenttable.score,
+			commenttable.commenttext,
+			commenttable.goodsID,
+			commenttable.commentCreatetime,
+			usertable.userLoginName,
+			usertable.userImg 
+		FROM
+			commenttable,
+			usertable 
+		WHERE
+			usertable.userID=commenttable.userID
+		AND
+			commenttable.goodsID = #{goodsID};
+	</select>
+	<resultMap type="comment" id="findCommentByGoodsIDRM">
+		<id property="commentID" column="commentID"/>
+		<result property="score" column="score"/>
+		<result property="commenttext" column="commenttext"/>
+		<result property="goodsID" column="goodsID"/>
+		<result property="commentCreatetime" column="commentCreatetime"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userLoginName" column="userLoginName"/>
+			<result property="userImg" column="userImg"/>
+		</association>
+	</resultMap>
+	<select id="findCommentByUserID" parameterType="int" resultMap="findCommentByUserIDRM">
+		SELECT
+			commenttable.*,
+			orderitemstable.goodsNumber,
+			orderitemstable.priceSum 
+		FROM
+			commenttable,orderitemstable
+		WHERE
+			commenttable.orderitemsID=orderitemstable.orderitemsID
+		AND
+			commenttable.userID=#{userID}
+	</select>
+	<resultMap type="comment" id="findCommentByUserIDRM">
+		<id property="commentID" column="commentID"/>
+		<result property="score" column="score"/>
+		<result property="commenttext" column="commenttext"/>
+		<result property="goodsID" column="goodsID"/>
+		<result property="commentCreatetime" column="commentCreatetime"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+		</association>
+		<association property="orderItems" column="orderitemsID" javaType="orderitems">
+			<id property="orderitemsID" column="orderitemsID"/>
+			<result property="goodsNumber" column="goodsNumber"/>
+			<result property="priceSum" column="priceSum"/>
+		</association>
+	</resultMap>
+</mapper>

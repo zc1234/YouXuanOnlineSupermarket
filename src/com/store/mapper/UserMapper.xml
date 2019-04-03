@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.UserMapper">
+	<insert id="insertUser" parameterType="user" useGeneratedKeys="true" keyProperty="userID">
+		INSERT INTO usertable(userLoginName,userPassword,userName,userSex,userBirthday,userImg,userBalance) VALUES
+		(#{userLoginName},#{userPassword},#{userName},'2',#{userBirthday},"UserImg/default.jpg",0);
+	</insert>
+	<update id="deleteUser" parameterType="int">
+		UPDATE usertable SET userStatus = 0 WHERE userID = #{userID};
+	</update>
+	<update id="recoverUser" parameterType="int">
+		UPDATE usertable SET userStatus = 1 WHERE userID = #{userID};
+	</update>
+	<update id="grantAdmin" parameterType="int">
+		UPDATE usertable SET userStatus = 2 WHERE userID = #{userID};
+	</update>
+	<update id="updateUser" parameterType="user">
+		UPDATE usertable SET userLoginName=#{userLoginName},userPassword=#{userPassword} WHERE id=#{id};
+	</update>
+	<select id="findUsers" parameterType="string" resultType="user">
+		SELECT id,username,password FROM user WHERE username LIKE CONCAT('%',#{username},'%');
+	</select>
+	<select id="countUserByFirstName" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM user WHERE username LIKE CONCAT(#{firstName},'%');
+	</select>
+	<select id="login_annotation" resultType="user">
+		SELECT * FROM usertable WHERE binary userLoginName =#{userLoginName} and userPassword=#{userPassword};
+	</select>
+	<select id="isThereSameName" parameterType="String" resultType="user">
+		SELECT * FROM usertable WHERE binary userLoginName =#{userLoginName}
+	</select>
+	<select id="searchUserByID" parameterType="int" resultType="user">
+		SELECT * FROM usertable WHERE userID = #{userID};
+	</select>
+	<select id="findOrdersByUser" parameterType="long" resultMap="findOrdersByUserRM">
+		SELECT ordertable.*,usertable.username FROM ordertable,usertable 
+		WHERE ordertable.userID=usertable.userID AND usertable.userID=#{userID};
+	</select>
+	<resultMap type="order" id="findOrdersByUserRM">
+		<id property="orderID" column="orderID"/>
+		<result property="orderNumber" column="orderNumber"/>
+		<result property="orderCreatetime" column="orderCreatetime"/>
+		<result property="orderNote" column="orderNote"/>
+		<association property="user" column="userID" javaType="user">
+			<id property="userID" column="userID"/>
+			<result property="userName" column="userName"/>
+		</association>
+	</resultMap>
+	<select id="showAllUsers" resultType="user">
+		SELECT userID,userLoginName,userName,userSex,userBirthday,userScore,userStatus FROM usertable LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="countAllUsers" resultType="int">
+		SELECT COUNT(*) FROM usertable;
+	</select>
+	<update id="updateUserInfo" parameterType="map">
+		UPDATE usertable
+		<trim prefix="SET" suffixOverrides=",">
+		<if test="userImg!=null">
+			userImg=#{userImg},
+		</if>
+		<if test="userSex!='3'">
+			userSex=#{userSex},
+		</if>
+		<if test="userBirthday!=''">
+			userBirthday=#{userBirthday},
+		</if>
+		<if test="userPhone!=''">
+			userPhone=#{userPhone},
+		</if>
+		<if test="userEmail!=''">
+			userEmail=#{userEmail}
+		</if>
+		</trim>
+		WHERE userID=#{userID}
+	</update>
+	<select id="findSafeInfo" parameterType="int" resultType="safe">
+		SELECT * FROM safetable WHERE userID = #{userID}
+	</select>
+	<insert id="insertIdentity" parameterType="map">
+		INSERT INTO safetable(userID,identity) VALUES(#{userID},#{identity});
+	</insert>
+	<update id="updateIdentity" parameterType="map">
+		UPDATE safetable SET identity = #{identity} WHERE userID = #{userID}
+	</update>
+	<insert id="insertProblem" parameterType="map">
+		INSERT INTO safetable(userID,question1,answer1,question2,answer2) 
+		VALUES(#{userID},#{question1},#{answer1},#{question2},#{answer2});
+	</insert>
+	<update id="updateProblem" parameterType="map">
+		UPDATE safetable SET question1=#{question1},answer1=#{answer1},
+		question2=#{question2},answer2=#{answer2} WHERE userID=#{userID}
+	</update>
+	<select id="checkPassword" parameterType="map" resultType="user">
+		SELECT * FROM usertable WHERE userID=#{userID} AND userPassword=#{oldPassword}
+	</select>
+	<update id="editPassword" parameterType="map">
+		UPDATE usertable SET userPassword=#{newPassword} WHERE userID=#{userID}
+	</update>
+	<select id="getBalance" parameterType="int" resultType="float">
+		SELECT userBalance FROM usertable WHERE userID=#{userID} 
+	</select>
+	<update id="updateBalance" parameterType="map">
+		UPDATE usertable SET userBalance=#{userBalance} WHERE userID=#{userID} 
+	</update>
+</mapper>

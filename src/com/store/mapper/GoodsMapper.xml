@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.store.mapper.GoodsMapper">
+	<select id="searchGoods" parameterType="string" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsName LIKE CONCAT('%',#{goodsname},'%') AND goodsStatus = '1';
+	</select>
+	<select id="countSearchResults" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM goodstable WHERE goodsName LIKE CONCAT('%',#{goodsname},'%') AND goodsStatus = '1';
+	</select>
+	<select id="searchGoodsByID" parameterType="int" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsID = #{goodsID}
+	</select>
+	<select id="goodsPaging" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsName LIKE CONCAT('%',#{goodsName},'%') AND goodsStatus = '1' LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="searchGoodsByType" parameterType="int" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsType = #{typeID} AND goodsStatus = '1'
+	</select>
+	<select id="countSearchGoodsByTypeResults" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM goodstable WHERE goodsType = #{typeID} AND goodsStatus = '1';
+	</select>
+	<select id="goodsByTypePaging" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsType = #{typeID} AND goodsStatus = '1' LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="istherechildtypes" parameterType="int" resultType="type">
+		SELECT typeID FROM typetable WHERE typeLast = #{typeID};
+	</select>
+	<select id="istherefathertype" parameterType="int" resultType="type">
+		SELECT * FROM typetable WHERE typeID = #{typeID};
+	</select>
+	<select id="searchGoodsByMultipleTypes" parameterType="java.util.List" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsType IN
+		<foreach item="currentType" index="index" collection="typelist" open="(" separator="," close=")">
+			#{currentType.typeID}
+		</foreach>
+	</select>
+	<select id="countSearchGoodsByMultipleTypes" parameterType="java.util.List" resultType="int">
+		SELECT COUNT(*) FROM goodstable WHERE goodsStatus = '1' AND goodsType IN
+		<foreach item="currentType" index="index" collection="typelist" open="(" separator="," close=")">
+			#{currentType.typeID}
+		</foreach>
+	</select>
+	<select id="goodsPagingByMultipleTypes" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsStatus = '1' AND goodsType IN
+		<foreach item="currentType" index="index" collection="typelist" open="(" separator="," close=")">
+			#{currentType.typeID}
+		</foreach>
+		LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="showAllGoods" resultType="goods">
+		SELECT * FROM goodstable LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="showSomeGoods" parameterType="int" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsStatus = #{param} LIMIT #{paging.index},#{paging.pageSize};
+	</select>
+	<select id="countAllGoods" resultType="int">
+		SELECT COUNT(*) FROM goodstable;
+	</select>
+	<select id="countSomeGoods" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM goodstable WHERE goodsStatus = #{param};
+	</select>
+	<update id="deleteGoods" parameterType="int">
+		UPDATE goodstable SET goodsStatus = 0 WHERE goodsID = #{goodsID};
+	</update>
+	<update id="recoverGoods" parameterType="int">
+		UPDATE goodstable SET goodsStatus = 1 WHERE goodsID = #{goodsID};
+	</update>
+	<insert id="insertGoods" parameterType="goods">
+		INSERT INTO goodstable(goodsName,goodsImg,goodsPrice,goodsType,goodsDetail,goodsCreatetime,goodsStock,goodsStatus) VALUES
+		(#{goodsName},#{goodsImg},#{goodsPrice},#{goodsType},#{goodsDetail},sysdate(),#{goodsStock},#{goodsStatus})
+	</insert>
+	<insert id="insertScoreGoods" parameterType="goods">
+		INSERT INTO goodstable(goodsName,goodsImg,goodsPrice,goodsType,goodsDetail,goodsCreatetime,goodsStock,goodsStatus,goodsScore) VALUES
+		(#{goodsName},#{goodsImg},0,#{goodsType},#{goodsDetail},sysdate(),#{goodsStock},#{goodsStatus},#{goodsPrice})
+	</insert>
+	<update id="updateGoods" parameterType="goods">
+		UPDATE goodstable
+		<trim prefix="SET" suffixOverrides=",">
+		<if test="goodsName!=''">
+			goodsName=#{goodsName},
+		</if>
+		<if test="goodsPrice!=0">
+			goodsPrice = #{goodsPrice},
+		</if>
+		<if test="goodsImg!=null">
+			goodsImg = #{goodsImg},
+		</if>
+		<if test="goodsType!=0">
+			goodsType = #{goodsType},
+		</if>
+		<if test="goodsDetail!=''">
+			goodsDetail = #{goodsDetail},
+		</if>
+		<if test="goodsStock!=0">
+			goodsStock = #{goodsStock},
+		</if>
+		<if test="goodsStatus!='2'">
+			goodsStatus = #{goodsStatus},
+		</if>
+		</trim>
+		WHERE goodsID = #{goodsID}
+	</update>
+	<update id="updateScoreGoods" parameterType="goods">
+		UPDATE goodstable
+		<trim prefix="SET" suffixOverrides=",">
+		<if test="goodsName!=''">
+			goodsName=#{goodsName},
+		</if>
+		<if test="goodsPrice!=0">
+			goodsScore = #{goodsPrice},
+		</if>
+		<if test="goodsImg!=null">
+			goodsImg = #{goodsImg},
+		</if>
+		<if test="goodsType!=0">
+			goodsType = #{goodsType},
+		</if>
+		<if test="goodsDetail!=''">
+			goodsDetail = #{goodsDetail},
+		</if>
+		<if test="goodsStock!=0">
+			goodsStock = #{goodsStock},
+		</if>
+		<if test="goodsStatus=='2'">
+			goodsStatus = #{goodsStatus},
+		</if>
+		</trim>
+		WHERE goodsID = #{goodsID}
+	</update>
+	<select id="getGoodsAvgPoints" parameterType="int" resultType="float">
+		SELECT AVG(score) FROM commenttable WHERE goodsID = #{goodsID}
+	</select>
+	<select id="getGoodsSaleNumber" parameterType="int" resultType="int">
+		SELECT COUNT( goodsNumber ) FROM orderitemstable WHERE goodsID = #{goodsID} AND orderitemsStatus != 0
+	</select>
+	<select id="getGoodsSale" parameterType="int" resultType="int">
+		SELECT SUM( goodsNumber ) FROM orderitemstable WHERE goodsID = #{goodsID} AND orderitemsStatus != 0
+	</select>
+	<select id="getMonthGoodsSaleNumber" parameterType="int" resultType="int">
+		SELECT COUNT( goodsNumber ) FROM orderitemstable,ordertable 
+		WHERE ordertable.orderID = orderitemstable.orderID 
+		AND goodsID = #{goodsID} AND orderitemsStatus != 0
+		AND ordertable.orderCreatetime BETWEEN date_add( SYSDATE( ), INTERVAL - 31 DAY ) AND SYSDATE( )
+	</select>
+	<select id="getMonthGoodsSale" parameterType="int" resultType="int">
+		SELECT SUM( goodsNumber ) FROM orderitemstable,ordertable 
+		WHERE ordertable.orderID = orderitemstable.orderID 
+		AND goodsID = #{goodsID} AND orderitemsStatus != 0
+		AND ordertable.orderCreatetime BETWEEN date_add( SYSDATE( ), INTERVAL - 31 DAY ) AND SYSDATE( )
+	</select>
+	<select id="getCommentNumberSum" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM commenttable WHERE goodsID = #{goodsID}
+	</select>
+	<select id="getCommentNumber" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM commenttable WHERE goodsID = #{goodsID} AND score=#{score}
+	</select>
+	<update id="recoverPrice" parameterType="map">
+		UPDATE goodstable SET goodsPrice = #{goodsPrice},goodsOriginalPrice = 0 WHERE goodsID = #{goodsID};
+	</update>
+	<update id="updatePrice" parameterType="map">
+		UPDATE goodstable SET goodsPrice = #{goodsPrice},goodsOriginalPrice = #{goodsOriginalPrice} WHERE goodsID = #{goodsID};
+	</update>
+	<update id="updateScore" parameterType="map">
+		UPDATE goodstable SET goodsScore = #{goodsScore} WHERE goodsID = #{goodsID};
+	</update>
+	<insert id="addToFavorite" parameterType="map">
+		INSERT INTO favoritetable(userID,goodsID,price) VALUES(#{userID},#{goodsID},#{price})
+	</insert>
+	<select id="isThereExistedFavorite" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM favoritetable WHERE userID = #{userID} AND goodsID = #{goodsID}
+	</select>
+	<update id="updateGoodsStock" parameterType="map">
+		UPDATE goodstable SET goodsStock = goodsStock - #{goodsNumber} WHERE goodsID = #{goodsID}
+	</update>
+	<select id="countScoreGoods" resultType="int">
+		SELECT COUNT(*) FROM goodstable WHERE goodsStatus = 2
+	</select>
+	<select id="searchScoreGoods" resultType="goods">
+		SELECT * FROM goodstable WHERE goodsStatus = 2
+	</select>
+	<update id="minusScore" parameterType="map">
+		UPDATE usertable SET userScore = userScore - #{score} WHERE userID = #{userID};
+	</update>
+</mapper>
